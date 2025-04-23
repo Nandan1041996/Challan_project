@@ -1,0 +1,615 @@
+
+    
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF Text Extractor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 20px;
+            overflow-y: hidden;
+        }
+        .main-container {
+            display: flex;
+            gap: 20px;
+            max-width: 1300px;
+        }
+        .container {
+            background: white;
+            height: 510px;
+            padding: 30px;
+            border-radius: 8px;
+            flex: 1;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+        }
+        .table-container {
+            background: white;
+            height: 510px;
+            padding: 30px;
+            border-radius: 8px;
+            flex: 1;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            z-index: 2;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        h1 {
+            margin-top: -10px;
+        }
+        form {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        input[type=file] {
+            margin: 10px 0;
+        }
+        .text-output {
+            width: 650px;
+            height: 280px;
+            padding: 5px;
+            font-family: monospace;
+            font-size: 7px;
+            white-space: pre-wrap;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            overflow-y: auto;
+            line-height: 1.5;
+            box-sizing: border-box;
+        }
+        .text-output a {
+            color: #7b75cf;
+            text-decoration: none;
+            cursor: pointer;
+            display: inline-block;
+        }
+        .text-output a:hover {
+            background-color: #f0f0f0;
+            border-radius: 3px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-right: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+            z-index: 100;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            position: relative;
+            font-size: 8px;
+            cursor: pointer;
+        }
+        th.selected {
+            background-color: #c8e6c9;
+        }
+        td {
+            min-height: 30px;
+            height: 30px;
+            vertical-align: top;
+            word-break: break-word;
+            font-size: 10px;
+        }
+        .clear-table {
+            background-color: #f44336;
+        }
+        .clear-table:hover {
+            background-color: #d32f2f;
+        }
+        .clear-column {
+            background-color: #ff9800;
+        }
+        .clear-column:hover {
+            background-color: #fb8c00;
+        }
+        .convert-button {
+            background-color: #2196F3;
+        }
+        .convert-button:hover {
+            background-color: #1e88e5;
+        }
+        .save-template-button {
+            background-color: #9C27B0;
+            margin-top: 10px;
+            margin-right: -16px;
+        }
+        .save-template-button:hover {
+            background-color: #8E24AA;
+        }
+        .delete-col-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        .delete-col-btn:hover {
+            background-color: #fb8c00;
+        }
+        .csv-output {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            min-height: 80px;
+            max-height: 120px;
+        }
+        /* New PDF Viewer styles */
+        .pdf-container {
+            display: flex;
+            flex-direction: column;
+            margin-top: 20px;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        .pdf-viewer {
+            width: 100%;
+            height: 100%;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background-color: #f9f9f9;
+            flex-grow: 1;
+            min-height: 200px;
+        }
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+        .tab {
+            padding: 8px 16px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-bottom: none;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+        }
+        .tab.active {
+            background-color: #f0f0f0;
+            border-color: #ccc;
+        }
+        .tab-content {
+            display: none;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+   
+    <script>
+        // Current column index to fill
+        let currentColIndex = 0;
+        let uploadedFileName = "";
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click event listeners to table headers
+            const headers = document.querySelectorAll('#data-table th');
+            headers.forEach((header, index) => {
+                header.addEventListener('click', function(e) {
+                    // Ignore clicks on the delete button
+                    if (e.target.classList.contains('delete-col-btn')) {
+                        return;
+                    }
+                    selectColumn(index);
+                });
+            });
+
+            // Tab functionality
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs and content
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding content
+                    this.classList.add('active');
+                    const contentId = this.getAttribute('data-tab');
+                    document.getElementById(contentId).classList.add('active');
+                });
+            });
+        });
+
+        function selectColumn(index) {
+            // Update current column index
+            currentColIndex = index;
+            
+            // Update column highlighting
+            highlightSelectedColumn();
+            
+            // Show notification
+            const notification = document.getElementById('notification');
+            notification.textContent = `Selected column ${index + 1} for input`;
+            notification.style.display = 'block';
+            setTimeout(function() {
+                notification.style.display = 'none';
+            }, 2000);
+        }
+
+        function highlightSelectedColumn() {
+            const table = document.getElementById('data-table');
+            // Remove highlight from all headers
+            for (let i = 0; i < table.rows[0].cells.length; i++) {
+                table.rows[0].cells[i].classList.remove('selected');
+            }
+            // Add highlight to the selected column
+            table.rows[0].cells[currentColIndex].classList.add('selected');
+        }
+
+        function handleFileSelect() {
+            const fileInput = document.getElementById('pdf_file');
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                uploadedFileName = file.name;
+                
+                // Display PDF in the viewer
+                const pdfViewer = document.getElementById('pdf-viewer');
+                
+                // Create object URL for the PDF
+                const objectUrl = URL.createObjectURL(file);
+                
+                // Set the object URL as the source for the PDF viewer
+                pdfViewer.setAttribute('src', objectUrl);
+                
+                // Show the PDF tab
+                document.querySelector('.tab[data-tab="pdf-tab"]').click();
+                
+                // Update the PDF filename display
+                document.getElementById('pdf-filename').textContent = file.name;
+                
+                // Log to confirm the filename is being set
+                console.log("File selected:", uploadedFileName);
+            }
+        }
+
+        document.querySelector('form')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('pdf_file');
+            const fileName = fileInput.files[0] ? fileInput.files[0].name : 'template';
+            console.log(fileName);
+            
+            // Later when saving template:
+            fetch('/save_template', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    original_filename: fileName,
+                    // other template data
+                    template_content: document.querySelector('.text-output').innerHTML,
+                    // ...
+                })
+            })
+            .then(response => response.json())
+            .then(data => console.log('Success:', data))
+            .catch(error => console.error('Error:', error));
+        });
+        
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                // Show notification
+                const notification = document.getElementById('notification');
+                notification.textContent = `Copied: "${text}"`;
+                notification.style.display = 'block';
+                setTimeout(function() {
+                    notification.style.display = 'none';
+                }, 2000);
+
+                // Add text to table
+                addToTable(text);
+            }).catch(function(err) {
+                console.error('Could not copy text: ', err);
+            });
+        }
+
+        function addToTable(text) {
+            // Get the table and first row
+            const table = document.getElementById('data-table');
+            const row = table.rows[1]; // Second row (first data row)
+            
+            // Add text to the current column
+            row.cells[currentColIndex].textContent = text;
+            
+            // Move to next column or loop back to first column
+            currentColIndex = (currentColIndex + 1) % 10;
+            
+            // Highlight the next column that will be filled
+            highlightSelectedColumn();
+        }
+
+        function clearTable() {
+            const table = document.getElementById('data-table');
+            const row = table.rows[1]; // Second row (first data row)
+            
+            // Clear all cells
+            for (let i = 0; i < 10; i++) {
+                row.cells[i].textContent = "";
+            }
+            
+            // Reset column index
+            currentColIndex = 0;
+            
+            // Update highlight
+            highlightSelectedColumn();
+            
+            // Clear CSV output
+            document.getElementById('csv-output').textContent = '';
+        }
+        
+        function clearColumn(colIndex) {
+            const table = document.getElementById('data-table');
+            const row = table.rows[1]; // Second row (first data row)
+            
+            // Clear specific column
+            row.cells[colIndex].textContent = "";
+        }
+        
+        function convertToCSV() {
+            const table = document.getElementById('data-table');
+            const headerRow = table.rows[0]; // First row (header)
+            const dataRow = table.rows[1]; // Second row (first data row)
+            const csvOutput = document.getElementById('csv-output');
+            
+            // Create array of "header: value" pairs
+            let headerValuePairs = [];
+            
+            for (let i = 0; i < headerRow.cells.length; i++) {
+                // Only include columns that have data
+                if (dataRow.cells[i].textContent.trim() !== '') {
+                    // Clean the header by removing the "×" character
+                    const header = headerRow.cells[i].textContent.trim().replace('×', '');
+                    const value = dataRow.cells[i].textContent.trim();
+                    headerValuePairs.push(`"${header}": "${value}"`);
+                }
+            }
+            
+            // Join with commas
+            const csvString = headerValuePairs.join(', ');
+            
+            // Display the CSV string
+            csvOutput.textContent = csvString;
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(csvString).then(function() {
+                const notification = document.getElementById('notification');
+                notification.textContent = "CSV copied to clipboard!";
+                notification.style.display = 'block';
+                setTimeout(function() {
+                    notification.style.display = 'none';
+                }, 2000);
+            });
+        }
+        
+function saveTemplate() {
+    const csvOutput = document.getElementById('csv-output').textContent.trim();
+    
+    if (!csvOutput) {
+        const notification = document.getElementById('notification');
+        notification.textContent = "Error: No CSV data to save!";
+        notification.style.backgroundColor = "#f44336";
+        notification.style.display = 'block';
+        setTimeout(function() {
+            notification.style.display = 'none';
+            notification.style.backgroundColor = "#4CAF50";
+        }, 2000);
+        return;
+    }
+    
+    // Use the uploadedFileName variable that was set during file selection
+    let filename = uploadedFileName ? uploadedFileName.replace(/\.[^/.]+$/, "") : "unnamed_document";
+    
+    // Create template data
+    const templateData = {
+        filename: filename,
+        csvData: csvOutput,
+        date: new Date().toISOString()
+    };
+    
+    console.log("Saving template with filename:", filename);
+    
+    // Create templates folder if it doesn't exist and save file
+    createFolderAndSaveFile(templateData);
+}
+        
+        function createFolderAndSaveFile(templateData) {
+            // We'll use the server-side endpoint to handle the file creation
+            fetch('/save_template', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(templateData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const notification = document.getElementById('notification');
+                if (data.success) {
+                    notification.textContent = "Template saved: " + data.filename;
+                    notification.style.backgroundColor = "#4CAF50";
+                } else {
+                    notification.textContent = "Error: " + data.error;
+                    notification.style.backgroundColor = "#f44336";
+                }
+                notification.style.display = 'block';
+                setTimeout(function() {
+                    notification.style.display = 'none';
+                    notification.style.backgroundColor = "#4CAF50";
+                }, 2000);
+            })
+            .catch(error => {
+                console.error('Error saving template:', error);
+                const notification = document.getElementById('notification');
+                notification.textContent = "Error saving template!";
+                notification.style.backgroundColor = "#f44336";
+                notification.style.display = 'block';
+                setTimeout(function() {
+                    notification.style.display = 'none';
+                    notification.style.backgroundColor = "#4CAF50";
+                }, 2000);
+            });
+        }
+
+        // Initialize on page load
+        window.onload = function() {
+            highlightSelectedColumn();
+            // Set the first tab as active by default
+            document.querySelector('.tab').click();
+        };
+    </script>
+</head>
+<body>
+    <div class="main-container">
+        <div class="container">
+            <h1>Upload PDF to Extract Text</h1>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="file" name="pdf_file" id="pdf_file" accept=".pdf" required onchange="handleFileSelect()">
+                <br>
+                <button type="submit">Upload your file</button>
+            </form>
+
+            <div class="content-area">
+                <div class="tabs">
+                    <div class="tab active" data-tab="pdf-tab">PDF Viewer</div>
+                    <div class="tab" data-tab="text-tab">Extracted Text</div>
+                </div>
+                
+                <div id="pdf-tab" class="tab-content active">
+                    <p id="pdf-filename">No file selected</p>
+                    <div class="pdf-container">
+                        <object id="pdf-viewer" class="pdf-viewer" type="application/pdf" data="" width="100%" height="100%">
+                            <p>It appears you don't have a PDF plugin for this browser. You can <a id="pdf-download-link" href="#">click here to download the PDF file.</a></p>
+                        </object>
+                    </div>
+                </div>
+                
+                <div id="text-tab" class="tab-content">
+                    {% if extracted_text %}
+                        <h2>Extracted Text (Click on words to copy):</h2>
+                        <div class="text-output">{{ extracted_text|safe }}</div>
+                    {% elif error_message %}
+                        <p class="error-message">{{ error_message }}</p>
+                    {% else %}
+                        <p>No text extracted yet. Please upload a PDF file first.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div> 
+    
+        <div class="table-container">
+            <h2>Selected Text Data</h2>
+            <p>Click on column header to select a column for input.</p>
+            <table id="data-table">
+                <tr>
+                    <th>Transporter <button class="delete-col-btn" onclick="clearColumn(0)">×</button></th>
+                    <th>LR NO. <button class="delete-col-btn" onclick="clearColumn(1)">×</button></th>
+                    <th>Gatepass No. <button class="delete-col-btn" onclick="clearColumn(2)">×</button></th>
+                    <th>Date / Time <button class="delete-col-btn" onclick="clearColumn(3)">×</button></th>
+                    <th>COMMODDITY <button class="delete-col-btn" onclick="clearColumn(9)">×</button></th>                   
+                    <th>Truck Owner's <button class="delete-col-btn" onclick="clearColumn(4)">×</button></th>
+                    <th>Driver Name <button class="delete-col-btn" onclick="clearColumn(5)">×</button></th>
+                    <th>Licence No. <button class="delete-col-btn" onclick="clearColumn(6)">×</button></th>
+                    <th>Mobile No. <button class="delete-col-btn" onclick="clearColumn(7)">×</button></th>
+                    <th>Col 9 <button class="delete-col-btn" onclick="clearColumn(8)">×</button></th>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </table>
+            
+            <div class="button-group">
+                <button class="clear-table" onclick="clearTable()">Clear All</button>
+                <button class="convert-button" onclick="convertToCSV()">Convert to Comma Sep. String</button>
+                <!-- <button class="save-template-button" onclick="saveTemplate()">Save as Template</button> -->
+            </div>
+            
+            <h3>Output:</h3>
+            <div id="csv-output" class="csv-output"></div>
+            <button class="save-template-button" onclick="saveTemplate()">Save as Template</button>
+
+        </div>
+    </div>
+    
+    <div id="notification" class="notification">Text copied to clipboard!</div>
+</body>
+</html>
